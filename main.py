@@ -77,6 +77,8 @@ class GridCell:
                 image = pygame.image.load("Assets/basil/Mine.png")
             else:
                 image = pygame.image.load(f"Assets/basil/{self.status}.png")
+
+        image = pygame.transform.scale(image, (48, 48))
         rect = image.get_rect()
         rect.topleft = (self.x * 48, self.y * 48)
         # check inputs
