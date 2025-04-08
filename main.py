@@ -14,6 +14,7 @@ ASSET_PACK = config["assetPack"]
 
 fail = False
 win = False
+setMines = False
 
 lose_messages = [
     "You lose!",
@@ -25,6 +26,36 @@ lose_current = ""
 
 pygame.font.init()
 my_font = pygame.font.SysFont('SystemBold', 35)
+
+def generate_mines(bx,by):
+    global mineGrid
+    limit = 0
+    while True or limit < 1000:
+        #generate mines
+        mineGrid = np.zeros((SCREEN_WIDTH // 48, SCREEN_HEIGHT // 48))
+        i = 0
+        while i < MINE_COUNT:
+            x = np.random.randint(0, SCREEN_WIDTH // 48)
+            y = np.random.randint(0, SCREEN_HEIGHT // 48)
+            if mineGrid[x][y] == 0:
+                mineGrid[x][y] = 1
+                i += 1
+        mineGrid = np.array(mineGrid, dtype=bool)
+        # check if cells adjacent to parameter are mines
+        count = 0
+        for x in range(0, 3):
+            for y in range(0, 3):
+                if 0 <= x < SCREEN_WIDTH // 48 and 0 <= y < SCREEN_HEIGHT // 48:
+                    if mineGrid[bx+x-1][by+y-1] == 1:
+                        count += 1
+        if count == 0:
+            break
+        limit += 1
+    #update grid with mine locations
+    for x in range(SCREEN_WIDTH // 48):
+        for y in range(SCREEN_HEIGHT // 48):
+            if mineGrid[x][y] == 1:
+                grid[x][y].is_mine = True
 
 class Base(pygame.sprite.Sprite):
     def __init__(self) -> None:
@@ -41,7 +72,7 @@ class GridCell:
         self.checked = False
 
         self.status = 0
-        self.is_mine = mineGrid[x][y]
+        self.is_mine = False
         self.is_open = False
         self.is_flagged = False
 
@@ -118,6 +149,11 @@ class GridCell:
         surface.blit(image,rect)
 
     def open(self):
+        # check if mines have been set
+        global setMines
+        if setMines == False:
+            generate_mines(self.x,self.y)
+            setMines = True
         global exposedCount
         # open cell
         if self.is_open == False:
@@ -185,17 +221,10 @@ while True:
 
     flagCount = 0
     exposedCount = 0
-    mineGrid = np.zeros((SCREEN_WIDTH // 48, SCREEN_HEIGHT // 48))
+    setMines = False
     
     delta = time.time()
-    i = 0
-    while i < MINE_COUNT:
-        x = np.random.randint(0, SCREEN_WIDTH // 48)
-        y = np.random.randint(0, SCREEN_HEIGHT // 48)
-        if mineGrid[x][y] == 0:
-            mineGrid[x][y] = 1
-            i += 1
-    mineGrid = np.array(mineGrid, dtype=bool)
+    
     info = Display(SCREEN_WIDTH//2,20)
     stopwatch = Display(SCREEN_WIDTH//2,SCREEN_HEIGHT-20)
 
